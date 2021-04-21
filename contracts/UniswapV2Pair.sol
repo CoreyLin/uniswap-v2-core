@@ -46,8 +46,10 @@ contract UniswapV2Pair is IUniswapV2Pair, UniswapV2ERC20 {
     uint public kLast; // reserve0 * reserve1, as of immediately after the most recent liquidity event
 
     /*
-    锁机制可以用modifier实现，先获取锁，执行完业务逻辑后，再释放锁。
-    目前还理解不了为什么需要在串行执行的交易中加锁，在以太坊StackExchange提问了：https://ethereum.stackexchange.com/questions/97512/why-is-modifier-lock-needed-in-uniswapv2pair-smart-contract
+    锁机制可以用modifier实现，先获取锁，执行完业务逻辑后，再释放锁。用这个lock修饰function是为了防止重入。
+    请参考 https://ethereum.stackexchange.com/questions/59386/reentrancy-attack-in-a-smart-contract/68024
+    https://ethereum.stackexchange.com/questions/57699/are-solidity-modifiers-functionally-equivalent-to-python-decorators
+    https://blog.51cto.com/u_13784902/2324021
     */
     uint private unlocked = 1;
     modifier lock() {
