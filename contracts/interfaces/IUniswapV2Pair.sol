@@ -21,7 +21,9 @@ interface IUniswapV2Pair {
 
     function permit(address owner, address spender, uint value, uint deadline, uint8 v, bytes32 r, bytes32 s) external;
 
+    // 每次通过mint创建流动性代币时都会发出。
     event Mint(address indexed sender, uint amount0, uint amount1);
+    // 每次通过burn销毁流动性代币时都会发出。
     event Burn(address indexed sender, uint amount0, uint amount1, address indexed to);
     event Swap(
         address indexed sender,
@@ -31,12 +33,17 @@ interface IUniswapV2Pair {
         uint amount1Out,
         address indexed to
     );
+    // 每次通过mint、burn、swap或sync更新储备时发出。
     event Sync(uint112 reserve0, uint112 reserve1);
 
     function MINIMUM_LIQUIDITY() external pure returns (uint);
     function factory() external view returns (address);
     function token0() external view returns (address);
     function token1() external view returns (address);
+    /*
+    返回用于为交易定价和分配流动性的token0和token1的储备。
+    也返回最后一个与当前pair发生交互的区块的时间戳。
+    */
     function getReserves() external view returns (uint112 reserve0, uint112 reserve1, uint32 blockTimestampLast);
     function price0CumulativeLast() external view returns (uint);
     function price1CumulativeLast() external view returns (uint);

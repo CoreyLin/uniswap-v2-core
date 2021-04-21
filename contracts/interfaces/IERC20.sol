@@ -1,5 +1,7 @@
 pragma solidity >=0.5.0;
-
+/*
+ERC20标准请参考 https://eips.ethereum.org/EIPS/eip-20
+*/
 interface IERC20 {
     event Approval(address indexed owner, address indexed spender, uint value);
     event Transfer(address indexed from, address indexed to, uint value);
