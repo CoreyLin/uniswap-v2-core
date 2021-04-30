@@ -358,6 +358,8 @@ contract UniswapV2Pair is IUniswapV2Pair, UniswapV2ERC20 {
         require(amount0In > 0 || amount1In > 0, 'UniswapV2: INSUFFICIENT_INPUT_AMOUNT');仅仅要求转账数量大于0，
         如果不加上这个判断，就会引起bug，导致黑客转一点点amount0In给pair，然后套出大量amount1Out。
         所以这个require是整个swap函数的核心部分。
+        此外，值得注意的是：swap函数并没有限制调用者即router的地址，也就是说任何人都可以调用swap函数，它的安全性保证就是通过上述的
+        判断“1.把一种token从兑换人转给pair合约”中转账的数量是足够的来实现。
         */
         require(balance0Adjusted.mul(balance1Adjusted) >= uint(_reserve0).mul(_reserve1).mul(1000**2), 'UniswapV2: K');
         }
