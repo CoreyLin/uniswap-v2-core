@@ -264,7 +264,11 @@ contract UniswapV2Pair is IUniswapV2Pair, UniswapV2ERC20 {
         amount0 = liquidity.mul(balance0) / _totalSupply; // using balances ensures pro-rata distribution
         amount1 = liquidity.mul(balance1) / _totalSupply; // using balances ensures pro-rata distribution
         require(amount0 > 0 && amount1 > 0, 'UniswapV2: INSUFFICIENT_LIQUIDITY_BURNED');
-        /*从pool token池中销毁liquidity数量的pool token*/
+        /*
+        从pool token池中销毁liquidity数量的pool token。
+        router的removeLiquidity中会先把用户指定数量的pool token转移给pair地址，然后调用pair合约的burn，在这里销毁掉
+        pair地址所持有的pool token之后，pair地址所拥有的pool token就为0了，等待下一笔pool token的转入。
+        */
         _burn(address(this), liquidity);
         /*把pair在token0和token1中的部分资产转账给to地址。转账必须成功，如果不成功，就回滚*/
         _safeTransfer(_token0, to, amount0);
