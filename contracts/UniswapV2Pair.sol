@@ -9,7 +9,7 @@ import './interfaces/IUniswapV2Factory.sol';
 import './interfaces/IUniswapV2Callee.sol';
 
 /*
-UniswapV2Pair既是pair，即币币兑换pair，也是一种ERC20 token，为流动性提供者提供UNI token，即pool token。
+UniswapV2Pair既是pair，即币币兑换pair，也是一种ERC20 token，为流动性提供者提供pool token。
 这里面包含注入流动性和兑换的核心逻辑，大量用到了require来做业务逻辑的校验和判断，如果有问题，就回滚。
 */
 contract UniswapV2Pair is IUniswapV2Pair, UniswapV2ERC20 {
@@ -196,30 +196,30 @@ contract UniswapV2Pair is IUniswapV2Pair, UniswapV2ERC20 {
         uint amount1 = balance1.sub(_reserve1);
 
         bool feeOn = _mintFee(_reserve0, _reserve1);
-        // 获取该pair作为ERC20的最新的totalSupply，即UNI的supply
+        // 获取该pair作为ERC20的最新的totalSupply，即pool token的supply
         uint _totalSupply = totalSupply; // gas savings, must be defined here since totalSupply can update in _mintFee
         if (_totalSupply == 0) {
             /*
-            如果_totalSupply为0，说明从来没有_mint过，UNI的总供应量为0.计算需要_mint的UNI的数量
+            如果_totalSupply为0，说明从来没有_mint过，pool token的总供应量为0.计算需要_mint的pool token的数量
             amount0*amount1的平方根，再减去MINIMUM_LIQUIDITY
             注意：此处MINIMUM_LIQUIDITY是1000，那么amount0*amount1的平方根必须大于1000才行，否则sub会下溢，交易回滚
-            另外，UNI的decimal是18，和大多数ERC20一样
+            另外，pool token的decimal是18，和大多数ERC20一样
             */
             liquidity = Math.sqrt(amount0.mul(amount1)).sub(MINIMUM_LIQUIDITY);
             /*
-            向0地址_mint MINIMUM_LIQUIDITY UNI token, _mint函数会增加totalSupply，意味着MINIMUM_LIQUIDITY被算进了totalSupply，
+            向0地址_mint MINIMUM_LIQUIDITY pool token, _mint函数会增加totalSupply，意味着MINIMUM_LIQUIDITY被算进了totalSupply，
             但是属于0地址，永远把这笔资金锁住了
             */
            _mint(address(0), MINIMUM_LIQUIDITY); // permanently lock the first MINIMUM_LIQUIDITY tokens
         } else {
             /*
-            如果_totalSupply不为0，说明不是第一次_mint UNI，计算需要_mint的UNI的数量
-            分别对token0和token1，首先计算增加的流动性占当前储备的占比，再乘以当前的UNI _totalSupply，分别得到token0和token1应该_mint的UNI数量，再取更小的那个
+            如果_totalSupply不为0，说明不是第一次_mint pool token，计算需要_mint的pool token的数量
+            分别对token0和token1，首先计算增加的流动性占当前储备的占比，再乘以当前的pool token _totalSupply，分别得到token0和token1应该_mint的pool token数量，再取更小的那个
             */
             liquidity = Math.min(amount0.mul(_totalSupply) / _reserve0, amount1.mul(_totalSupply) / _reserve1);
         }
         require(liquidity > 0, 'UniswapV2: INSUFFICIENT_LIQUIDITY_MINTED');
-        // 给to地址_mint UNI token，作为向pair添加流动性的回报
+        // 给to地址_mint pool token，作为向pair添加流动性的回报
         _mint(to, liquidity);
 
         /*
@@ -247,8 +247,8 @@ contract UniswapV2Pair is IUniswapV2Pair, UniswapV2ERC20 {
         uint balance0 = IERC20(_token0).balanceOf(address(this));
         uint balance1 = IERC20(_token1).balanceOf(address(this));
         /*
-        获取pair自己的UNI token的余额。pair本身也是一种ERC20，此处即获取pair自己的地址的余额。
-        这个余额实质上就是在router的removeLiquidity中，从UNI token持有者转给pair的。
+        获取pair自己的pool token的余额。pair本身也是一种ERC20，此处即获取pair自己的地址的余额。
+        这个余额实质上就是在router的removeLiquidity中，从pool token持有者转给pair的。
         */
         uint liquidity = balanceOf[address(this)];
 
@@ -258,13 +258,13 @@ contract UniswapV2Pair is IUniswapV2Pair, UniswapV2ERC20 {
         */
         uint _totalSupply = totalSupply; // gas savings, must be defined here since totalSupply can update in _mintFee
         /*
-        此处用到了SafeMath里的乘法mul，防止溢出。实际上这里的逻辑是根据本次要移除的liquidity(UNI token)占总的UNI token的比例，
+        此处用到了SafeMath里的乘法mul，防止溢出。实际上这里的逻辑是根据本次要移除的liquidity(pool token)占总的pool token的比例，
         计算出应该给退出流动性池的账户转多少toekn0和token1。总的原则就是按比例分配。
         */
         amount0 = liquidity.mul(balance0) / _totalSupply; // using balances ensures pro-rata distribution
         amount1 = liquidity.mul(balance1) / _totalSupply; // using balances ensures pro-rata distribution
         require(amount0 > 0 && amount1 > 0, 'UniswapV2: INSUFFICIENT_LIQUIDITY_BURNED');
-        /*从UNI token池中销毁liquidity数量的UNI token*/
+        /*从pool token池中销毁liquidity数量的pool token*/
         _burn(address(this), liquidity);
         /*把pair在token0和token1中的部分资产转账给to地址。转账必须成功，如果不成功，就回滚*/
         _safeTransfer(_token0, to, amount0);

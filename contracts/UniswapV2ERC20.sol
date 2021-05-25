@@ -3,8 +3,8 @@ pragma solidity =0.5.16;
 import './interfaces/IUniswapV2ERC20.sol';
 import './libraries/SafeMath.sol';
 /*
-此处定义UniswapV2ERC20是用于被UniswapV2Pair继承的，UniswapV2Pair也是一种ERC20 token，表示UNI token。
-当流动性提供者向一个币币兑换的pair中注入流动性后，就会得到UNI token。
+此处定义UniswapV2ERC20是用于被UniswapV2Pair继承的，UniswapV2Pair也是一种ERC20 token，表示pool token。
+当流动性提供者向一个币币兑换的pair中注入流动性后，就会得到pool token。
 从这里可以看出，IUniswapV2ERC20被所有的UniswapV2Pair继承，意味着所有UniswapV2Pair的ERC20相关的状态变量和
 函数都是相同的，比如，name都是Uniswap V2，symbol都是UNI-V2
 */
