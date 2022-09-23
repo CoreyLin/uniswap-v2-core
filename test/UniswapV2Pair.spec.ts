@@ -111,28 +111,28 @@ describe('UniswapV2Pair', () => {
   it('swap:token0', async () => {
     const token0Amount = expandTo18Decimals(5)
     const token1Amount = expandTo18Decimals(10)
-    await addLiquidity(token0Amount, token1Amount)
+    await addLiquidity(token0Amount, token1Amount) // 添加流动性
 
     const swapAmount = expandTo18Decimals(1)
     const expectedOutputAmount = bigNumberify('1662497915624478906')
-    await token0.transfer(pair.address, swapAmount)
+    await token0.transfer(pair.address, swapAmount) // trader把1e18 token0转给pair
     await expect(pair.swap(0, expectedOutputAmount, wallet.address, '0x', overrides))
-      .to.emit(token1, 'Transfer')
+      .to.emit(token1, 'Transfer') // pair转token1给trader
       .withArgs(pair.address, wallet.address, expectedOutputAmount)
-      .to.emit(pair, 'Sync')
+      .to.emit(pair, 'Sync') // reserve0增加,reserve1减少
       .withArgs(token0Amount.add(swapAmount), token1Amount.sub(expectedOutputAmount))
-      .to.emit(pair, 'Swap')
+      .to.emit(pair, 'Swap') // Swap事件,amount0In,amount1Out不为0
       .withArgs(wallet.address, swapAmount, 0, 0, expectedOutputAmount, wallet.address)
 
     const reserves = await pair.getReserves()
     expect(reserves[0]).to.eq(token0Amount.add(swapAmount))
     expect(reserves[1]).to.eq(token1Amount.sub(expectedOutputAmount))
-    expect(await token0.balanceOf(pair.address)).to.eq(token0Amount.add(swapAmount))
-    expect(await token1.balanceOf(pair.address)).to.eq(token1Amount.sub(expectedOutputAmount))
-    const totalSupplyToken0 = await token0.totalSupply()
-    const totalSupplyToken1 = await token1.totalSupply()
-    expect(await token0.balanceOf(wallet.address)).to.eq(totalSupplyToken0.sub(token0Amount).sub(swapAmount))
-    expect(await token1.balanceOf(wallet.address)).to.eq(totalSupplyToken1.sub(token1Amount).add(expectedOutputAmount))
+    expect(await token0.balanceOf(pair.address)).to.eq(token0Amount.add(swapAmount)) // pair的token0余额
+    expect(await token1.balanceOf(pair.address)).to.eq(token1Amount.sub(expectedOutputAmount)) // pair的token1余额
+    const totalSupplyToken0 = await token0.totalSupply() // token0的总供应量
+    const totalSupplyToken1 = await token1.totalSupply() // token1的总供应量
+    expect(await token0.balanceOf(wallet.address)).to.eq(totalSupplyToken0.sub(token0Amount).sub(swapAmount)) // trader添加了流动性，把token0Amount转给了pair，然后又swap，把swapAmount转给pair
+    expect(await token1.balanceOf(wallet.address)).to.eq(totalSupplyToken1.sub(token1Amount).add(expectedOutputAmount)) // trader添加了流动性，把token1Amount转给了pair，然后又swap，从pair得到了expectedOutputAmount
   })
 
   it('swap:token1', async () => {
