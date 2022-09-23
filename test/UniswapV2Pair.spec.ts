@@ -21,15 +21,15 @@ describe('UniswapV2Pair', () => {
     mnemonic: 'horn horn horn horn horn horn horn horn horn horn horn horn',
     gasLimit: 9999999
   })
-  const [wallet, other] = provider.getWallets()
-  const loadFixture = createFixtureLoader(provider, [wallet])
+  const [wallet, other] = provider.getWallets() // 获取钱包
+  const loadFixture = createFixtureLoader(provider, [wallet]) // 用于加载fixture
 
   let factory: Contract
   let token0: Contract
   let token1: Contract
   let pair: Contract
   beforeEach(async () => {
-    const fixture = await loadFixture(pairFixture)
+    const fixture = await loadFixture(pairFixture) // 加载pairFixture, 加载后就可以得到factory, token0, token1, pair，都已经部署好了
     factory = fixture.factory
     token0 = fixture.token0
     token1 = fixture.token1
@@ -39,27 +39,27 @@ describe('UniswapV2Pair', () => {
   it('mint', async () => {
     const token0Amount = expandTo18Decimals(1)
     const token1Amount = expandTo18Decimals(4)
-    await token0.transfer(pair.address, token0Amount)
-    await token1.transfer(pair.address, token1Amount)
+    await token0.transfer(pair.address, token0Amount) // 转1e18个token0给pair
+    await token1.transfer(pair.address, token1Amount) // 转4e18个token1给pair
 
-    const expectedLiquidity = expandTo18Decimals(2)
+    const expectedLiquidity = expandTo18Decimals(2) // 期望的liquidity是2e18
     await expect(pair.mint(wallet.address, overrides))
-      .to.emit(pair, 'Transfer')
+      .to.emit(pair, 'Transfer') // 期望emit Transfer，参数为0地址，0地址，MINIMUM_LIQUIDITY
       .withArgs(AddressZero, AddressZero, MINIMUM_LIQUIDITY)
-      .to.emit(pair, 'Transfer')
+      .to.emit(pair, 'Transfer') // 期望emit Transfer，参数为0地址，trader地址，2e18-MINIMUM_LIQUIDITY
       .withArgs(AddressZero, wallet.address, expectedLiquidity.sub(MINIMUM_LIQUIDITY))
-      .to.emit(pair, 'Sync')
+      .to.emit(pair, 'Sync') // 期望emit Sync, 参数为1e18,4e18
       .withArgs(token0Amount, token1Amount)
-      .to.emit(pair, 'Mint')
+      .to.emit(pair, 'Mint') // 期望emit Sync, 参数为1e18,4e18
       .withArgs(wallet.address, token0Amount, token1Amount)
 
-    expect(await pair.totalSupply()).to.eq(expectedLiquidity)
-    expect(await pair.balanceOf(wallet.address)).to.eq(expectedLiquidity.sub(MINIMUM_LIQUIDITY))
-    expect(await token0.balanceOf(pair.address)).to.eq(token0Amount)
-    expect(await token1.balanceOf(pair.address)).to.eq(token1Amount)
+    expect(await pair.totalSupply()).to.eq(expectedLiquidity) // 期望LP token的totalSupply为2e18
+    expect(await pair.balanceOf(wallet.address)).to.eq(expectedLiquidity.sub(MINIMUM_LIQUIDITY)) // 期望trader的LP token的余额为2e18-MINIMUM_LIQUIDITY
+    expect(await token0.balanceOf(pair.address)).to.eq(token0Amount) // 验证pair已经拥有了token0Amount
+    expect(await token1.balanceOf(pair.address)).to.eq(token1Amount) // 验证pair已经拥有了token1Amount
     const reserves = await pair.getReserves()
-    expect(reserves[0]).to.eq(token0Amount)
-    expect(reserves[1]).to.eq(token1Amount)
+    expect(reserves[0]).to.eq(token0Amount) // reserve0等于1e18
+    expect(reserves[1]).to.eq(token1Amount) // reserve1等于4e18
   })
 
   async function addLiquidity(token0Amount: BigNumber, token1Amount: BigNumber) {
