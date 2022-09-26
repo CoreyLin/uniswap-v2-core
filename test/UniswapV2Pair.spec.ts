@@ -181,32 +181,32 @@ describe('UniswapV2Pair', () => {
   })
 
   it('burn', async () => {
-    const token0Amount = expandTo18Decimals(3)
-    const token1Amount = expandTo18Decimals(3)
-    await addLiquidity(token0Amount, token1Amount)
+    const token0Amount = expandTo18Decimals(3) // 3e18
+    const token1Amount = expandTo18Decimals(3) // 3e18
+    await addLiquidity(token0Amount, token1Amount) // 添加流动性
 
-    const expectedLiquidity = expandTo18Decimals(3)
-    await pair.transfer(pair.address, expectedLiquidity.sub(MINIMUM_LIQUIDITY))
-    await expect(pair.burn(wallet.address, overrides))
-      .to.emit(pair, 'Transfer')
+    const expectedLiquidity = expandTo18Decimals(3) // 期望得到3e18流动性
+    await pair.transfer(pair.address, expectedLiquidity.sub(MINIMUM_LIQUIDITY)) // LP调用pair，把LP token转给pair合约
+    await expect(pair.burn(wallet.address, overrides)) // pair合约burn掉LP token，即移除流动性
+      .to.emit(pair, 'Transfer') // 期望pair合约把LP token转给了零地址，即burn掉了
       .withArgs(pair.address, AddressZero, expectedLiquidity.sub(MINIMUM_LIQUIDITY))
-      .to.emit(token0, 'Transfer')
+      .to.emit(token0, 'Transfer') // 期望pair把3e18-1000 token0转给LP
       .withArgs(pair.address, wallet.address, token0Amount.sub(1000))
-      .to.emit(token1, 'Transfer')
+      .to.emit(token1, 'Transfer') // 期望pair把3e18-1000 token1转给LP
       .withArgs(pair.address, wallet.address, token1Amount.sub(1000))
-      .to.emit(pair, 'Sync')
+      .to.emit(pair, 'Sync') // 移除流动性之后还剩1000的token0,token1
       .withArgs(1000, 1000)
-      .to.emit(pair, 'Burn')
+      .to.emit(pair, 'Burn') // 记录本次burn行为
       .withArgs(wallet.address, token0Amount.sub(1000), token1Amount.sub(1000), wallet.address)
 
-    expect(await pair.balanceOf(wallet.address)).to.eq(0)
-    expect(await pair.totalSupply()).to.eq(MINIMUM_LIQUIDITY)
-    expect(await token0.balanceOf(pair.address)).to.eq(1000)
-    expect(await token1.balanceOf(pair.address)).to.eq(1000)
+    expect(await pair.balanceOf(wallet.address)).to.eq(0) // LP已经没有LP token了
+    expect(await pair.totalSupply()).to.eq(MINIMUM_LIQUIDITY) // pair还剩1000 LP token
+    expect(await token0.balanceOf(pair.address)).to.eq(1000) // pair还剩1000 token0
+    expect(await token1.balanceOf(pair.address)).to.eq(1000) // pair还剩1000 token1
     const totalSupplyToken0 = await token0.totalSupply()
     const totalSupplyToken1 = await token1.totalSupply()
-    expect(await token0.balanceOf(wallet.address)).to.eq(totalSupplyToken0.sub(1000))
-    expect(await token1.balanceOf(wallet.address)).to.eq(totalSupplyToken1.sub(1000))
+    expect(await token0.balanceOf(wallet.address)).to.eq(totalSupplyToken0.sub(1000)) // LP有3e18-1000 token0
+    expect(await token1.balanceOf(wallet.address)).to.eq(totalSupplyToken1.sub(1000)) // LP有3e18-1000 token1
   })
 
   it('price{0,1}CumulativeLast', async () => {
